@@ -1,4 +1,4 @@
-# Auction Theory: Market Neutral Conditional Probabilities Equity Index Futures Trading System
+# Auction Market Theory: Market Neutral Conditional Probabilities Equity Index Futures Trading System
 
 Code snippet of S&P e-mini futures trading strategy in C# for use with Multicharts.NET
 
@@ -292,36 +292,10 @@ namespace PowerLanguage.Strategy
             m_atr = this.AverageTrueRange(AtrLength);
 			
             if (TickExit)
-            {
-                var marketPosition = StrategyInfo.MarketPosition;
-                if (marketPosition != 0)
-                {
-                    if (marketPosition > 0 && tickHigh >= 200 + (m_atr * 4.5 * TickTouchEntry))
-                        _marketOrder[EOrderAction.Sell].Send("Tick LX");
 
-                    if (marketPosition < 0 && tickLow <= -200 - (m_atr * 3.5 * TickTouchEntry))
-                        _marketOrder[EOrderAction.BuyToCover].Send("Tick SX");
-                }
-            }
 
             if (TickEntry)
-            {
-                if (tick >= 360 + (m_atr * 9 * TickTouchEntry))
-                    _tickOverboughtCounter++;
-
-                if (tick <= -280 - (m_atr * 7 * TickTouchEntry))
-                    _tickOversoldCounter++;
-
-                if (_isBuyEnabled && _tickOversoldCounter >= TickTouchEntry && close < _volumeProfile[0].POC - (m_atr * 1.5) && Bars.TimeValue.TimeOfDay < _tickEntryEndTime)
-                {
-                    _tickOversoldCounter = 0;
-                    _marketOrder[EOrderAction.Buy].Send("Tick LE");
-                }
-
-                if (_isSellEnabled && _tickOverboughtCounter >= TickTouchEntry && close > _volumeProfile[0].POC + (m_atr * 1.5) && Bars.TimeValue.TimeOfDay < _tickEntryEndTime)
-                {
-                    _tickOverboughtCounter = 0;
-                    _marketOrder[EOrderAction.SellShort].Send("Tick SE");
+  
                 }
             }
         }
@@ -446,15 +420,6 @@ namespace PowerLanguage.Strategy
             var close = Bars.CloseValue;
             var openGap = m_todaysopen.Value -  m_yestclose.Value;
 			
-			// Average True Range Entry for Future Open Gap Fill Trade
-            if (_isTradingTime[0] && AtrEntry && _atr.HasValue && time[0].TimeOfDay < _tradeEntryEndTime)
-            {
-                if (_isBuyEnabled && close <=  m_yestclose.Value - _atr * (_atr/100) && close < _volumeProfile[0].POC - _volumeProfile[0].VAR * _atr / 10)
-                    _marketOrder[EOrderAction.Buy].Send("ATR LE");
-
-                if (_isSellEnabled && close >=  m_yestclose.Value + _atr * (_atr/100) && close > _volumeProfile[0].POC + _volumeProfile[0].VAR * _atr / 10)
-                    _marketOrder[EOrderAction.SellShort].Send("ATR SE");
-            }	
 
 			// Initial Balance Entry
             var ibTradeTime = Bars.Time[0].Date.Add(_tradingStartTime).AddHours(1);
@@ -478,7 +443,7 @@ namespace PowerLanguage.Strategy
 				  _initialBalanceLow = Math.Min(Bars.Low[i], _initialBalanceLow.Value);
 				}
 
-                var ibRange = _initialBalanceHigh - _initialBalanceLow;
+                		var ibRange = _initialBalanceHigh - _initialBalanceLow;
 				var ibLRange = _volumeProfile[0].POC - _initialBalanceLow;
 				var ibHRange = _initialBalanceHigh - _volumeProfile[0].POC;
 				var ihVAR = _volumeProfile[0].VAH - _volumeProfile[0].POC;
@@ -496,48 +461,10 @@ namespace PowerLanguage.Strategy
 				var YC = m_yestclose.Value;			
 
 				// Long Entry				
-                if (_isBuyEnabled && (ihVAR < ilVAR && ibHRange < ibLRange &&  TO < YC &&  TPOC < YPOC && Math.Abs(openGap) > Math.Abs(POCCh) && TVAL > YVAL) || (ihVAR < ilVAR && ibHRange < ibLRange &&  TO < YC &&  TPOC < YPOC && openGap < 0 && TVAL > YVAL && TO > TPOC)|| (ihVAR < ilVAR && ibHRange < ibLRange &&  TO < YC &&  TPOC < YPOC && Math.Abs(openGap) > Math.Abs(POCCh) && TVAL < YVAL) || (ihVAR < ilVAR && ibHRange < ibLRange &&  TO < YC &&  TPOC < YPOC && openGap/TO > 0.015 && openGap < 0 && Math.Abs(openGap) < Math.Abs(POCCh) && TVAL < YVAL && TO < TPOC) || (ihVAR < ilVAR && ibHRange < ibLRange &&  TO < YC &&  TPOC < YPOC && openGap < 0 && Math.Abs(openGap) < Math.Abs(POCCh) && TVAL < YVAL && TO < TPOC && TVAH < YVAL) || (ihVAR < ilVAR && ibHRange < ibLRange &&  TO < YC &&  TPOC < YPOC && openGap < 0 && Math.Abs(openGap) < Math.Abs(POCCh) && TVAL < YVAL && TO > TPOC && TVAH < YVAL & Math.Abs(openGap/TO) > 0.05))
-                   _marketOrder[EOrderAction.Buy].Send("IB LE");
-				if (_isBuyEnabled && (ihVAR < ilVAR && ibHRange < ibLRange &&  TO < YC &&  TPOC > YPOC && TO > TPOC))	
-                    _marketOrder[EOrderAction.Buy].Send("IB LE");
-				if (_isBuyEnabled && (ihVAR < ilVAR && ibHRange < ibLRange &&  TO > YC &&  TPOC > YPOC && TO < TPOC) || (ihVAR < ilVAR && ibHRange < ibLRange &&  TO > YC &&  TPOC > YPOC && Math.Abs(openGap) > Math.Abs(POCCh) && TVAL > YVAL))
-                    _marketOrder[EOrderAction.Buy].Send("IB LE");
-				if (_isBuyEnabled && (ihVAR < ilVAR && ibHRange > ibLRange &&  TO < YC &&  TPOC > YPOC))
-                    _marketOrder[EOrderAction.Buy].Send("IB LE");
-				if (_isBuyEnabled && (ihVAR < ilVAR && ibHRange > ibLRange &&  TO > YC &&  TPOC < YPOC))
-                    _marketOrder[EOrderAction.Buy].Send("IB LE");
-				if (_isBuyEnabled && (ihVAR > ilVAR && ibHRange < ibLRange &&  TO > YC &&  TPOC < YPOC))
-                    _marketOrder[EOrderAction.Buy].Send("IB LE");
-				if (_isBuyEnabled && (ihVAR > ilVAR && ibHRange < ibLRange &&  TO > YC &&  TPOC > YPOC))
-                    _marketOrder[EOrderAction.Buy].Send("IB LE");
- 				if (_isBuyEnabled && (ihVAR > ilVAR && ibHRange > ibLRange &&  TO < YC &&  TPOC < YPOC && Math.Abs(openGap) < Math.Abs(POCCh)&& TVAL < YVAL && TO > TPOC && TVAH < YVAL && Math.Abs(openGap) > 60) || (ihVAR > ilVAR && ibHRange > ibLRange &&  TO < YC &&  TPOC < YPOC && Math.Abs(openGap) < Math.Abs(POCCh) && TVAL > YVAL && TO > TPOC) || (ihVAR > ilVAR && ibHRange > ibLRange &&  TO < YC &&  TPOC < YPOC && Math.Abs(openGap) < Math.Abs(POCCh) && TVAL < YVAL && TO < TPOC && openGap > -1))
-                    _marketOrder[EOrderAction.Buy].Send("IB LE");
-				if (_isBuyEnabled && (ihVAR > ilVAR && ibHRange > ibLRange &&  TO < YC && TPOC > YPOC && TVAL < YVAL  && Math.Abs(openGap) < Math.Abs(POCCh) && TO > TPOC))
-                    _marketOrder[EOrderAction.Buy].Send("IB LE");
-				if (_isBuyEnabled && (ihVAR > ilVAR && ibHRange > ibLRange &&  TO > YC &&  TPOC < YPOC)) //&& Math.Abs(openGap) < Math.Abs(POCCh))
-                    _marketOrder[EOrderAction.Buy].Send("IB LE");
-				if (_isBuyEnabled && (ihVAR > ilVAR && ibHRange > ibLRange &&  TO > YC &&  TPOC > YPOC && Math.Abs(openGap) < Math.Abs(POCCh) && TVAL > YVAL && TO < TPOC) || (ihVAR > ilVAR && ibHRange > ibLRange &&  TO > YC &&  TPOC > YPOC && Math.Abs(openGap) > Math.Abs(POCCh) && TVAL > YVAL && TO < TPOC) || (ihVAR > ilVAR && ibHRange > ibLRange &&  TO > YC &&  TPOC > YPOC && Math.Abs(openGap) < Math.Abs(POCCh) && openGap/TO < 0.003) || (ihVAR > ilVAR && ibHRange > ibLRange &&  TO > YC &&  TPOC > YPOC && Math.Abs(openGap) > Math.Abs(POCCh) && TVAL > YVAL && TO > TPOC && openGap/TO < 0.018))
-                    _marketOrder[EOrderAction.Buy].Send("IB LE");
+
 												
 				// Short Entry				
-                if (_isSellEnabled && (ihVAR < ilVAR && ibHRange < ibLRange && TO < YC && TPOC < YPOC && TVAL < YVAL))
-                    _marketOrder[EOrderAction.SellShort].Send("IB SE");				
-				if (_isSellEnabled && (ihVAR < ilVAR && ibHRange < ibLRange && TO < YC && TPOC > YPOC && TO < TPOC))
-                    _marketOrder[EOrderAction.SellShort].Send("IB SE");				
-				if (_isSellEnabled && (ihVAR < ilVAR && ibHRange < ibLRange && TO > YC && TPOC < YPOC))
-                    _marketOrder[EOrderAction.SellShort].Send("IB SE");
-				if (_isSellEnabled && (ihVAR < ilVAR && ibHRange < ibLRange && TO > YC && TPOC > YPOC && TO > TPOC))
-                    _marketOrder[EOrderAction.SellShort].Send("IB SE");
-				if (_isSellEnabled && (ihVAR < ilVAR && ibHRange > ibLRange && TO < YC && TPOC < YPOC) && (Math.Abs(openGap) <= Math.Abs(POCCh) && TVAL < YVAL))
-                    _marketOrder[EOrderAction.SellShort].Send("IB SE");
-				if (_isSellEnabled && (ihVAR > ilVAR && ibHRange < ibLRange && TO < YC && TPOC < YPOC))
-                    _marketOrder[EOrderAction.SellShort].Send("IB SE");
-				if (_isSellEnabled && (ihVAR > ilVAR && ibHRange > ibLRange && TO < YC && TPOC < YPOC && TVAL < YVAL && TVAH < YVAL) || (ihVAR > ilVAR && ibHRange > ibLRange && TO < YC && TPOC < YPOC && TVAL < YVAL && TVAH > YVAL))
-                    _marketOrder[EOrderAction.SellShort].Send("IB SE");
-				if (_isSellEnabled && ihVAR > ilVAR && ibHRange > ibLRange && TO < YC && TPOC > YPOC && TVAL > YVAL && TO > TPOC)
-                    _marketOrder[EOrderAction.SellShort].Send("IB SE");
-				if (_isSellEnabled && (ihVAR > ilVAR && ibHRange > ibLRange && TO > YC && TPOC > YPOC && (Math.Abs(openGap) < Math.Abs(POCCh) && TVAL > YVAL && TO > TPOC) ||(ihVAR > ilVAR && ibHRange > ibLRange && TO > YC && TPOC > YPOC && openGap > POCCh && TVAL > YVAL && TO > TPOC))) 
-                    _marketOrder[EOrderAction.SellShort].Send("IB SE");
+     
             }
 			
 			// Volume Profile Entry
@@ -548,46 +475,14 @@ namespace PowerLanguage.Strategy
                     return;
 				
                 _atr = this.AverageTrueRange(AtrLength, 0, _dailyDataStream);
-				var hRange = _volumeProfile[0].VAH - _volumeProfile[0].POC;
-				var lRange = _volumeProfile[0].POC -_volumeProfile[0].VAL;
-				var TPOC = _volumeProfile[0].POC;
-				var TVAH = _volumeProfile[0].VAH;
-				var TVAL = _volumeProfile[0].VAL;
-				var YPOC = _volumeProfile[1].POC;
-				var YVAH = _volumeProfile[1].VAH;
-				var YVAL = _volumeProfile[1].VAL;
-				var POCCh = _volumeProfile[0].POC - _volumeProfile[1].POC;
-				var TO = m_todaysopen.Value;
-				var YC = m_yestclose.Value;	
-				var YH = m_yesthigh.Value;
-				var YL = m_yestlow.Value; 
+			
 				
 				// Long Conditions
-                if (_isBuyEnabled && close < _volumeProfile[0].VAL - (m_atr) && openGap < _volumeProfile[0].VAR && _volumeProfile[0].POC > _volumeProfile[1].POC && time[0].TimeOfDay > _volumeProfileEntryTime)
-                    _marketOrder[EOrderAction.Buy].Send("VP LE");
-				
-				if (_isBuyEnabled && close > _volumeProfile[1].VAL && close < _volumeProfile[0].POC -(m_atr *2) && hRange < lRange && m_todaysopen.Value < _volumeProfile[0].POC && time[0].TimeOfDay > _volumeProfileEntryTime && close < _volumeProfile[0].VAH )
-                    _marketOrder[EOrderAction.Buy].Send("VP LE");
-				
-				if (_isBuyEnabled && close > _volumeProfile[1].VAH && close < _volumeProfile[0].VAL - (m_atr) && m_todaysopen.Value < _volumeProfile[0].POC && time[0].TimeOfDay > _volumeProfileEntryTime && close < _volumeProfile[0].VAH )
-                    _marketOrder[EOrderAction.Buy].Send("VP LE");
-				
-				if (_isBuyEnabled && close > YVAL && TO > YPOC && close < TPOC)
-                    _marketOrder[EOrderAction.Buy].Send("VP LE");
+
 
 				
 				// Short Conditions
-                if (_isSellEnabled && close > _volumeProfile[0].VAH + (m_atr) && _volumeProfile[0].POC > _volumeProfile[1].POC  && close < _volumeProfile[1].VAL && openGap < _volumeProfile[0].VAR && time[0].TimeOfDay > _volumeProfileEntryTime)
-                    _marketOrder[EOrderAction.SellShort].Send("VP SE");
-				
-				if (_isSellEnabled && close > _volumeProfile[0].POC + (m_atr * 2.5) && _volumeProfile[0].POC > _volumeProfile[1].POC && hRange > lRange && m_todaysopen.Value > _volumeProfile[0].POC  && openGap < _volumeProfile[0].VAR && time[0].TimeOfDay > _volumeProfileEntryTime)
-                   _marketOrder[EOrderAction.SellShort].Send("VP SE");
-				
-				if (_isSellEnabled && close > _volumeProfile[0].POC + _ptf && m_todayshigh.Value < m_yestlow.Value && time[0].TimeOfDay > _volumeProfileEntryTime)
-                   _marketOrder[EOrderAction.SellShort].Send("VP SE");
-				
-				//if (_isSellEnabled && close < YH && TO < YPOC && close > TVAH)
-                //    _marketOrder[EOrderAction.SellShort].Send("VP SE");
+
 
             }	
 
