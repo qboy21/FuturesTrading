@@ -1,4 +1,5 @@
-# Auction Market Theory: Market Neutral Conditional Probabilities Equity Index Futures Trading System
+# Auction Market Theory: Market Neutral Equity Index Futures Trading System
+Conditional Probabilities Based Intraday Only
 
 Code snippet of S&P e-mini futures trading strategy in C# for use with Multicharts.NET
 ![ES](es.png)
